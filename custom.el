@@ -94,6 +94,15 @@
 ;; Wakatime config
 (global-wakatime-mode)
 
+;; Projectile
+(projectile-mode)
+
+;; helm projectile
+
+(require 'helm-projectile)
+(helm-projectile-on)
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
