@@ -30,13 +30,14 @@
     helm
     helm-projectile
     json-reformat
-
+    flyspell
     ;; Modes
     wakatime-mode
     json-mode
     markdown-mode
     scss-mode
-    sass-mode))
+    sass-mode
+    web-mode))
 
 ;; and install them all if they are not already installed
 (dolist (package my/packages)
