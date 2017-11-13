@@ -28,6 +28,7 @@
     git-gutter
     projectile
     helm
+    helm-projectile
     json-reformat
 
     ;; Modes
