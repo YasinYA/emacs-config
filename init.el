@@ -31,6 +31,7 @@
     helm-projectile
     json-reformat
     flyspell
+    flycheck
     ;; Modes
     wakatime-mode
     json-mode

@@ -1,4 +1,5 @@
 ;; starting up hide the splash screen
+
 (setq inhibit-splash-screen t
       initial-scratch-message nil
       initial-major-mode 'org-mode)
@@ -179,6 +180,8 @@
 (put 'js2-mode 'flyspell-mode-predicate 'js-flyspell-verify)
 (put 'rjsx-mode 'flyspell-mode-predicate 'js-flyspell-verify)
 
+;; flycheck
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; Emacs customize
 (custom-set-variables
