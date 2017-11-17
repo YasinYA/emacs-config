@@ -1,8 +1,7 @@
 ;; starting up hide the splash screen
 
 (setq inhibit-splash-screen t
-      initial-scratch-message nil
-      initial-major-mode 'org-mode)
+      initial-scratch-message nil)
 
 
 ;; indentation
@@ -189,8 +188,8 @@
 (require 'multiple-cursors)
 
 (global-set-key (kbd "C-c m e") 'mc/edit-lines)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c >") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-c <") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c m a") 'mc/mark-all-like-this)
 
 ;; Emacs customize
