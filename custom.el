@@ -1,4 +1,5 @@
 ;; starting up hide the splash screen
+
 (setq inhibit-splash-screen t
       initial-scratch-message nil
       initial-major-mode 'org-mode)
@@ -10,7 +11,7 @@
 
 
 ;; use 2 spaces for tabs
-(defun die-tabs ()
+(defun rock-tabs ()
   (interactive)
   (set-variable 'tab-width 4)
   (mark-whole-buffer)
@@ -102,7 +103,97 @@
 (require 'helm-projectile)
 (helm-projectile-on)
 
+;; flyspell
 
+(autoload 'flyspell-mode "flyspell" "On-the-fly spelling checking" t)
+
+
+;; for performance
+(setq flyspell-issue-welcome-flag nil)
+
+
+(add-hook          'c-mode-hook 'flyspell-prog-mode)
+(add-hook     'python-mode-hook 'flyspell-prog-mode)
+(add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode)
+
+
+;; web-mode flyspell settings
+(defun web-mode-flyspell-verify ()
+  (let* ((f (get-text-property (- (point) 1) 'face))
+	 rlt)
+    (cond
+     ;; Check the words with these font faces, possibly.
+     ;; this *blacklist* will be tweaked in next condition
+     ((not (memq f '(web-mode-html-attr-value-face
+		     web-mode-html-tag-face
+		     web-mode-html-attr-name-face
+		     web-mode-constant-face
+		     web-mode-doctype-face
+		     web-mode-keyword-face
+		     web-mode-comment-face ;; focus on get html label right
+		     web-mode-function-name-face
+		     web-mode-variable-name-face
+		     web-mode-css-property-name-face
+		     web-mode-css-selector-face
+		     web-mode-css-color-face
+		     web-mode-type-face
+		     web-mode-block-control-face)))
+      (setq rlt t))
+     ;; check attribute value under certain conditions
+     ((memq f '(web-mode-html-attr-value-face))
+      (save-excursion
+	(search-backward-regexp "=['\"]" (line-beginning-position) t)
+	(backward-char)
+	(setq rlt (string-match "^\\(value\\|class\\|ng[A-Za-z0-9-]*\\)$"
+				(thing-at-point 'symbol)))))
+     ;; finalize the blacklist
+     (t
+      (setq rlt nil)))
+    rlt))
+(put 'web-mode 'flyspell-mode-predicate 'web-mode-flyspell-verify)
+
+;; don't mark double word error
+(defvar flyspell-check-doublon t
+  "Check double word when calling `flyspell-highlight-incorrect-region'.")
+(make-variable-buffer-local 'flyspell-check-doublon)
+
+(defadvice flyspell-highlight-incorrect-region (around flyspell-highlight-incorrect-region-hack activate)
+  (if (or flyspell-check-doublon (not (eq 'doublon (ad-get-arg 2))))
+      ad-do-it))
+
+(defun web-mode-hook-setup ()
+  (flyspell-mode 1)
+  (setq flyspell-check-doublon nil))
+
+(add-hook 'web-mode-hook 'web-mode-hook-setup)
+
+;; JavaScript and React flyspell
+(defun js-flyspell-verify ()
+  (let* ((f (get-text-property (- (point) 1) 'face)))
+    ;; *whitelist*
+    ;; only words with following font face will be checked
+    (memq f '(js2-function-call
+	      js2-function-param
+	      js2-object-property
+	      font-lock-variable-name-face
+	      font-lock-string-face
+	      font-lock-function-name-face))))
+(put 'js2-mode 'flyspell-mode-predicate 'js-flyspell-verify)
+(put 'rjsx-mode 'flyspell-mode-predicate 'js-flyspell-verify)
+
+;; flycheck
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
+
+;; multiple cursors
+(require 'multiple-cursors)
+
+(global-set-key (kbd "C-c m e") 'mc/edit-lines)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c m a") 'mc/mark-all-like-this)
+
+;; Emacs customize
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -112,6 +203,9 @@
  '(custom-safe-themes
    (quote
     ("eea01f540a0f3bc7c755410ea146943688c4e29bea74a29568635670ab22f9bc" default)))
+ '(package-selected-packages
+   (quote
+    (multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
  '(wakatime-python-bin nil))
