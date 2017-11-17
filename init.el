@@ -26,6 +26,7 @@
 (setq my/packages
   '(auto-complete
     git-gutter
+    multiple-cursors
     projectile
     helm
     helm-projectile

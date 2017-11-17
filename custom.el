@@ -107,6 +107,7 @@
 
 (autoload 'flyspell-mode "flyspell" "On-the-fly spelling checking" t)
 
+
 ;; for performance
 (setq flyspell-issue-welcome-flag nil)
 
@@ -183,6 +184,15 @@
 ;; flycheck
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+
+;; multiple cursors
+(require 'multiple-cursors)
+
+(global-set-key (kbd "C-c m e") 'mc/edit-lines)
+(global-set-key (kbd "C->") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-c m a") 'mc/mark-all-like-this)
+
 ;; Emacs customize
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -193,6 +203,9 @@
  '(custom-safe-themes
    (quote
     ("eea01f540a0f3bc7c755410ea146943688c4e29bea74a29568635670ab22f9bc" default)))
+ '(package-selected-packages
+   (quote
+    (multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
  '(wakatime-python-bin nil))
