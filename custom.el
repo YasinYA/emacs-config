@@ -68,7 +68,7 @@
   (delete-trailing-whitespace))
 
 (defun cleanup-region (beg end)
-  "Remove tmux artifacts from region."
+  ;; Remove tmux artifacts from region.
   (interactive "r")
   (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
     (replace-regexp re "" nil beg end)))
@@ -101,6 +101,11 @@
 
 (require 'helm-projectile)
 (helm-projectile-on)
+
+;; Auto-Complete
+(ac-config-default)
+(global-auto-complete-mode t)
+
 
 ;; flyspell
 

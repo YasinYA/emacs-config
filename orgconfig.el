@@ -34,6 +34,12 @@
 (setq org-journal-date-format "#+TITLE: Journal Entry- %e %b %Y (%A)")
 
 
+;; Org-capture template
+
+(setq org-capture-templates (quote (
+("D" "diary" entry (file "~/Org/journal/work_diary.org") "* %T %?"))))
+(global-set-key [f8] 'org-capture)
+
 ;; org default files
 (setq org-agenda-files '("~/Org/personal"
                          "~/Org/technical"
