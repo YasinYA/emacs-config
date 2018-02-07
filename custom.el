@@ -38,9 +38,12 @@
 (global-set-key (kbd "C-;") 'toggle-comment-on-line)
 
 
-;; disable backup files
-(setq make-backup-files nil)
-
+;; Although i didn't use them, but i still think it may
+;; useful to keep and store all backup and autosave files in the directory
+(setq backup-directory-alist
+      `((".*" . ,"~/.emacs.d/emacs_backup")))
+(setq auto-save-file-name-transforms
+      `((".*" ,"~/.emacs.d/auto_save" t)))
 
 ;;  time
 (display-time-mode 1)
@@ -203,13 +206,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes (quote (monokai-alt)))
+ '(custom-enabled-themes (quote (twilight-bright)))
  '(custom-safe-themes
    (quote
-    ("eea01f540a0f3bc7c755410ea146943688c4e29bea74a29568635670ab22f9bc" default)))
+    ("c1390663960169cd92f58aad44ba3253227d8f715c026438303c09b9fb66cdfb" "eea01f540a0f3bc7c755410ea146943688c4e29bea74a29568635670ab22f9bc" default)))
  '(package-selected-packages
    (quote
-    (multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
+    (twilight-bright-theme multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
  '(wakatime-python-bin nil))

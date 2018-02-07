@@ -2,3 +2,7 @@
 /elpa
 /elpa-*
 projectile-bookmarks.eld
+*.dat
+/emacs_backup
+/auto_save
+.mc-lists.el

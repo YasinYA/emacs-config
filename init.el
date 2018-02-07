@@ -51,6 +51,7 @@
     json-reformat
     flyspell
     flycheck
+
     ;; Modes
     wakatime-mode
     json-mode
@@ -58,7 +59,11 @@
     scss-mode
     sass-mode
     web-mode
-    
+
+    ;; Themes
+    monokai-alt-theme
+    twilight-bright-theme
+
     ;;org packages
     org-journal
     org-bullets))
