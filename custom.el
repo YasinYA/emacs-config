@@ -215,7 +215,8 @@
     (twilight-bright-theme multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
- '(wakatime-python-bin nil))
+ '(wakatime-python-bin nil)
+ '(xterm-mouse-mode t))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
