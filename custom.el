@@ -114,6 +114,11 @@
 (ac-config-default)
 (global-auto-complete-mode t)
 
+(require 'flycheck)
+
+(setq-default flycheck-disabled-checkers
+              (append flycheck-disabled-checkers
+                      '(javascript-jshint json-jsonlist)))
 
 ;; flyspell
 
@@ -164,6 +169,25 @@
     rlt))
 (put 'web-mode 'flyspell-mode-predicate 'web-mode-flyspell-verify)
 
+;; For jsx syntax highlighting
+(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+
+;; web-mode indentation
+(defun web-mode-init-hook ()
+  "Hooks for Web mode.  Adjust indent."
+  (setq web-mode-markup-indent-offset 4))
+
+(add-hook 'web-mode-hook  'web-mode-init-hook)
+
+;; Enable Emmet for web-mode
+(add-hook 'web-mode-hook  'emmet-mode)
+
+;; use eslint with web-mode for jsx files
+(flycheck-add-mode 'javascript-eslint 'web-mode)
+
+;; use project node_modules for eslint
+(add-hook 'flycheck-mode-hook 'add-node-modules-path)
+
 ;; don't mark double word error
 (defvar flyspell-check-doublon t
   "Check double word when calling `flyspell-highlight-incorrect-region'.")
@@ -196,6 +220,14 @@
 ;; flycheck
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+;; Prettier
+(require 'prettier-js)
+
+(defun web-mode-init-prettier-hook ()
+  (add-node-modules-path)
+  (prettier-js-mode))
+
+(add-hook 'web-mode-hook  'web-mode-init-prettier-hook)
 
 ;; multiple cursors
 (require 'multiple-cursors)
@@ -225,7 +257,7 @@
  '(fci-rule-color "#d9d9d9")
  '(package-selected-packages
    (quote
-    (twilight-bright-theme multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
+    (prettier-js add-node-modules-path twilight-bright-theme multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
  '(wakatime-python-bin nil)
