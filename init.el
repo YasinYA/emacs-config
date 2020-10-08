@@ -50,16 +50,26 @@
     helm-projectile
     json-reformat
     flyspell
+    typescript-mode
+    tide
+    company
+    go-autocomplete
+    add-node-modules-path
     flycheck
+    doom-themes
+    doom-modeline
+    all-the-icons
 
     ;; Modes
     wakatime-mode
     json-mode
+    go-mode
     markdown-mode
     scss-mode
     sass-mode
-    web-mode
-
+    prettier-js
+    emmet-mode
+    
     ;; Themes
     monokai-alt-theme
     twilight-bright-theme

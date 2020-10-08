@@ -134,56 +134,10 @@
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode)
 
 
-;; web-mode flyspell settings
-(defun web-mode-flyspell-verify ()
-  (let* ((f (get-text-property (- (point) 1) 'face))
-	 rlt)
-    (cond
-     ;; Check the words with these font faces, possibly.
-     ;; this *blacklist* will be tweaked in next condition
-     ((not (memq f '(web-mode-html-attr-value-face
-		     web-mode-html-tag-face
-		     web-mode-html-attr-name-face
-		     web-mode-constant-face
-		     web-mode-doctype-face
-		     web-mode-keyword-face
-		     web-mode-comment-face ;; focus on get html label right
-		     web-mode-function-name-face
-		     web-mode-variable-name-face
-		     web-mode-css-property-name-face
-		     web-mode-css-selector-face
-		     web-mode-css-color-face
-		     web-mode-type-face
-		     web-mode-block-control-face)))
-      (setq rlt t))
-     ;; check attribute value under certain conditions
-     ((memq f '(web-mode-html-attr-value-face))
-      (save-excursion
-	(search-backward-regexp "=['\"]" (line-beginning-position) t)
-	(backward-char)
-	(setq rlt (string-match "^\\(value\\|class\\|ng[A-Za-z0-9-]*\\)$"
-				(thing-at-point 'symbol)))))
-     ;; finalize the blacklist
-     (t
-      (setq rlt nil)))
-    rlt))
-(put 'web-mode 'flyspell-mode-predicate 'web-mode-flyspell-verify)
-
-;; For jsx syntax highlighting
-(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-
-;; web-mode indentation
-(defun web-mode-init-hook ()
-  "Hooks for Web mode.  Adjust indent."
-  (setq web-mode-markup-indent-offset 4))
-
-(add-hook 'web-mode-hook  'web-mode-init-hook)
-
-;; Enable Emmet for web-mode
-(add-hook 'web-mode-hook  'emmet-mode)
-
-;; use eslint with web-mode for jsx files
-(flycheck-add-mode 'javascript-eslint 'web-mode)
+;; Emmet
+(require 'emmet-mode)
+(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+(add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
 
 ;; use project node_modules for eslint
 (add-hook 'flycheck-mode-hook 'add-node-modules-path)
@@ -197,13 +151,25 @@
   (if (or flyspell-check-doublon (not (eq 'doublon (ad-get-arg 2))))
       ad-do-it))
 
-(defun web-mode-hook-setup ()
-  (flyspell-mode 1)
-  (setq flyspell-check-doublon nil))
 
-(add-hook 'web-mode-hook 'web-mode-hook-setup)
+;; JavaScript and React
 
-;; JavaScript and React flyspell
+;; Tide
+(defun setup-tide-mode ()
+  "Setup function for tide."
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  (company-mode +1))
+
+(setq company-tooltip-align-annotations t)
+
+(add-hook 'js-mode-hook #'setup-tide-mode)
+
+;; flyspell
 (defun js-flyspell-verify ()
   (let* ((f (get-text-property (- (point) 1) 'face)))
     ;; *whitelist*
@@ -222,12 +188,17 @@
 
 ;; Prettier
 (require 'prettier-js)
+(add-hook 'js-mode-hook 'prettier-js-mode)
 
-(defun web-mode-init-prettier-hook ()
-  (add-node-modules-path)
-  (prettier-js-mode))
+(setq prettier-js-args '(
+  "--trailing-comma" "none"
+  "--bracket-spacing" "true"
+  "--single-quote" "true"
+  "--no-semi" "true"
+  "--jsx-single-quote" "true"
+  "--jsx-bracket-same-line" "true"
+  "--tab-width" "4"))
 
-(add-hook 'web-mode-hook  'web-mode-init-prettier-hook)
 
 ;; multiple cursors
 (require 'multiple-cursors)
@@ -236,6 +207,60 @@
 (global-set-key (kbd "C-c >") 'mc/mark-next-like-this)
 (global-set-key (kbd "C-c <") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c m a") 'mc/mark-all-like-this)
+
+;; Go
+
+;; Godoc
+(defun set-exec-path-from-shell-PATH ()
+  (let ((path-from-shell (replace-regexp-in-string
+                          "[ \t\n]*$"
+                          ""
+                          (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+    (setenv "PATH" path-from-shell)
+    (setq eshell-path-env path-from-shell) ; for eshell users
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(when window-system (set-exec-path-from-shell-PATH))
+
+;; GOPATH
+(setenv "GOPATH" "/home/yasinya/go")
+
+;; Gofmt Auto call on save
+(add-to-list 'exec-path "/home/yasinya/go/bin/")
+(add-hook 'before-save-hook 'gofmt-before-save)
+
+;; Go Autocomplete
+(defun auto-complete-for-go ()
+(auto-complete-mode 1))
+ (add-hook 'go-mode-hook 'auto-complete-for-go)
+
+ (with-eval-after-load 'go-mode
+   (require 'go-autocomplete))
+
+
+;; Goimports
+(defun my-go-mode-hook ()
+  ; Use goimports instead of go-fmt
+  (setq gofmt-command "goimports")
+  ; Call Gofmt before saving
+  (add-hook 'before-save-hook 'gofmt-before-save)
+  ; Customize compile command to run go build
+  (if (not (string-match "go" compile-command))
+      (set (make-local-variable 'compile-command)
+           "go build -v && go test -v && go vet"))
+  ; Godef jump key binding
+  (local-set-key (kbd "M-.") 'godef-jump)
+  (local-set-key (kbd "M-*") 'pop-tag-mark)
+)
+(add-hook 'go-mode-hook 'my-go-mode-hook)
+
+;; All the icons
+(require 'all-the-icons)
+(all-the-icons-insert-icons-for 'alltheicon)
+
+;; Doom Modeline
+(require 'doom-modeline)
+(doom-modeline-mode 1)
 
 ;; Emacs customize
 (custom-set-variables
@@ -249,15 +274,15 @@
    ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
  '(ansi-term-color-vector
    [unspecified "#FFFFFF" "#d15120" "#5f9411" "#d2ad00" "#6b82a7" "#a66bab" "#6b82a7" "#505050"])
- '(custom-enabled-themes (quote (misterioso)))
+ '(custom-enabled-themes (quote (doom-one)))
  '(custom-safe-themes
    (quote
-    ("8dce5b23232d0a490f16d62112d3abff6babeef86ae3853241a85856f9b0a6e7" "c1390663960169cd92f58aad44ba3253227d8f715c026438303c09b9fb66cdfb" "eea01f540a0f3bc7c755410ea146943688c4e29bea74a29568635670ab22f9bc" default)))
+    ("2d1fe7c9007a5b76cea4395b0fc664d0c1cfd34bb4f1860300347cdad67fb2f9" default)))
  '(fci-rule-character-color "#d9d9d9")
  '(fci-rule-color "#d9d9d9")
  '(package-selected-packages
    (quote
-    (prettier-js add-node-modules-path twilight-bright-theme multiple-cursors web-mode wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
+    (emmet-mode doom-themes doom-modeline go-autocomplete exec-path-from-shell go-mode prettier-js add-node-modules-path twilight-bright-theme multiple-cursors wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
  '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
  '(wakatime-cli-path "/usr/local/bin/wakatime")
  '(wakatime-python-bin nil)
@@ -269,3 +294,141 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 136 :width normal :foundry "unknown" :family "DejaVu Sans Mono")))))
+
+
+
+;; Doom Modeline Customizations
+
+;; How tall the mode-line should be. It's only respected in GUI.
+;; If the actual char height is larger, it respects the actual height.
+(setq doom-modeline-height 25)
+
+;; How wide the mode-line bar should be. It's only respected in GUI.
+(setq doom-modeline-bar-width 3)
+
+;; How to detect the project root.
+;; The default priority of detection is `ffip' > `projectile' > `project'.
+;; nil means to use `default-directory'.
+;; The project management packages have some issues on detecting project root.
+;; e.g. `projectile' doesn't handle symlink folders well, while `project' is unable
+;; to hanle sub-projects.
+;; You can specify one if you encounter the issue.
+(setq doom-modeline-project-detection 'project)
+
+;; Determines the style used by `doom-modeline-buffer-file-name'.
+;;
+;; Given ~/Projects/FOSS/emacs/lisp/comint.el
+;;   truncate-upto-project => ~/P/F/emacs/lisp/comint.el
+;;   truncate-from-project => ~/Projects/FOSS/emacs/l/comint.el
+;;   truncate-with-project => emacs/l/comint.el
+;;   truncate-except-project => ~/P/F/emacs/l/comint.el
+;;   truncate-upto-root => ~/P/F/e/lisp/comint.el
+;;   truncate-all => ~/P/F/e/l/comint.el
+;;   relative-from-project => emacs/lisp/comint.el
+;;   relative-to-project => lisp/comint.el
+;;   file-name => comint.el
+;;   buffer-name => comint.el<2> (uniquify buffer name)
+;;
+;; If you are experiencing the laggy issue, especially while editing remote files
+;; with tramp, please try `file-name' style.
+;; Please refer to https://github.com/bbatsov/projectile/issues/657.
+(setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+
+;; Whether display icons in mode-line. Respects `all-the-icons-color-icons'.
+;; While using the server mode in GUI, should set the value explicitly.
+(setq doom-modeline-icon (display-graphic-p))
+
+;; Whether display the icon for `major-mode'. Respects `doom-modeline-icon'.
+(setq doom-modeline-major-mode-icon t)
+
+;; Whether display the colorful icon for `major-mode'.
+;; Respects `doom-modeline-major-mode-icon'.
+(setq doom-modeline-major-mode-color-icon t)
+
+;; Whether display the icon for the buffer state. It respects `doom-modeline-icon'.
+(setq doom-modeline-buffer-state-icon t)
+
+;; Whether display the modification icon for the buffer.
+;; Respects `doom-modeline-icon' and `doom-modeline-buffer-state-icon'.
+(setq doom-modeline-buffer-modification-icon t)
+
+;; Whether to use unicode as a fallback (instead of ASCII) when not using icons.
+(setq doom-modeline-unicode-fallback nil)
+
+;; Whether display the minor modes in mode-line.
+(setq doom-modeline-minor-modes (featurep 'minions))
+
+;; If non-nil, a word count will be added to the selection-info modeline segment.
+(setq doom-modeline-enable-word-count nil)
+
+;; Major modes in which to display word count continuously.
+;; Also applies to any derived modes. Respects `doom-modeline-enable-word-count'.
+(setq doom-modeline-continuous-word-count-modes '(text-mode))
+
+;; Whether display the buffer encoding.
+(setq doom-modeline-buffer-encoding t)
+
+;; Whether display the indentation information.
+(setq doom-modeline-indent-info nil)
+
+;; If non-nil, only display one number for checker information if applicable.
+(setq doom-modeline-checker-simple-format t)
+
+;; The maximum number displayed for notifications.
+(setq doom-modeline-number-limit 99)
+
+;; The maximum displayed length of the branch name of version control.
+(setq doom-modeline-vcs-max-length 12)
+
+;; Whether display the perspective name. Non-nil to display in mode-line.
+(setq doom-modeline-persp-name t)
+
+;; If non nil the default perspective name is displayed in the mode-line.
+(setq doom-modeline-display-default-persp-name nil)
+
+;; Whether display the `lsp' state. Non-nil to display in mode-line.
+(setq doom-modeline-lsp t)
+
+;; Whether display the GitHub notifications. It requires `ghub' package.
+(setq doom-modeline-github nil)
+
+;; The interval of checking GitHub.
+(setq doom-modeline-github-interval (* 30 60))
+
+;; Whether display the modal state icon.
+;; Including `evil', `overwrite', `god', `ryo' and `xah-fly-keys', etc.
+(setq doom-modeline-modal-icon t)
+
+;; Whether display the mu4e notifications. It requires `mu4e-alert' package.
+(setq doom-modeline-mu4e t)
+
+;; Whether display the IRC notifications. It requires `circe' or `erc' package.
+(setq doom-modeline-irc t)
+
+;; Function to stylize the irc buffer names.
+(setq doom-modeline-irc-stylize 'identity)
+
+;; Whether display the environment version.
+(setq doom-modeline-env-version t)
+;; Or for individual languages
+(setq doom-modeline-env-enable-python t)
+(setq doom-modeline-env-enable-ruby t)
+(setq doom-modeline-env-enable-perl t)
+(setq doom-modeline-env-enable-go t)
+(setq doom-modeline-env-enable-elixir t)
+(setq doom-modeline-env-enable-rust t)
+
+;; Change the executables to use for the language version string
+(setq doom-modeline-env-python-executable "python") ; or `python-shell-interpreter'
+(setq doom-modeline-env-ruby-executable "ruby")
+(setq doom-modeline-env-perl-executable "perl")
+(setq doom-modeline-env-go-executable "go")
+(setq doom-modeline-env-elixir-executable "iex")
+(setq doom-modeline-env-rust-executable "rustc")
+
+;; What to dispaly as the version while a new one is being loaded
+(setq doom-modeline-env-load-string "...")
+
+;; Hooks that run before/after the modeline version string is updated
+(setq doom-modeline-before-update-env-hook nil)
+(setq doom-modeline-after-update-env-hook nil)
