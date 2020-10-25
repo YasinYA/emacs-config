@@ -1,8 +1,19 @@
 ;; starting up hide the splash screen
-
 (setq inhibit-splash-screen t
       initial-scratch-message nil)
 
+;; Projectile dirs
+(setq projectile-project-search-path '("~/Projects/" "~/Work/"))
+
+
+;; Company Global mode
+(add-hook 'after-init-hook 'global-company-mode)
+
+;; Dumb-jump
+(add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+
+;; GO to
+(dumb-jump-mode)
 
 ;; indentation
 
@@ -110,9 +121,6 @@
 (require 'helm-projectile)
 (helm-projectile-on)
 
-;; Auto-Complete
-(ac-config-default)
-(global-auto-complete-mode t)
 
 (require 'flycheck)
 
@@ -138,6 +146,8 @@
 (require 'emmet-mode)
 (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
 (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+(global-set-key (kbd "C-`") 'emmet-expand-line)
+
 
 ;; use project node_modules for eslint
 (add-hook 'flycheck-mode-hook 'add-node-modules-path)
@@ -152,22 +162,87 @@
       ad-do-it))
 
 
-;; JavaScript and React
+;; JavaScript, Typescript and React
 
-;; Tide
+;; Tide setup
+(add-to-list 'exec-path "/usr/bin/node")
+
 (defun setup-tide-mode ()
-  "Setup function for tide."
   (interactive)
+  ;;  (setq tide-tsserver-process-environment '("TSS_LOG=-level verbose -file /tmp/tss.log"))
   (tide-setup)
+  (if (file-exists-p (concat tide-project-root "node_modules/typescript/bin/tsserver"))
+    (setq tide-tsserver-executable "node_modules/typescript/bin/tsserver"))
   (flycheck-mode +1)
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
   (eldoc-mode +1)
   (tide-hl-identifier-mode +1)
-  (company-mode +1))
+  (setq tide-format-options '(:indentSize 2 :tabSize 2 :insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
+  (local-set-key (kbd "C-c d") 'tide-documentation-at-point)
+  (company-mode +1)
+  (setq company-minimum-prefix-length 1))
 
-(setq company-tooltip-align-annotations t)
+(require 'use-package)
+(use-package tide
+  :ensure t
+  :config
+  (progn
+    (company-mode +1)
+    ;; aligns annotation to the right hand side
+    (setq company-tooltip-align-annotations t)
+    (add-hook 'typescript-mode-hook #'setup-tide-mode)
+    (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+  ))
 
-(add-hook 'js-mode-hook #'setup-tide-mode)
+;; use web-mode + tide-mode for javascript instead
+(use-package js2-mode
+  :ensure t
+  :config
+  (progn
+    (add-hook 'js2-mode-hook #'setup-tide-mode)
+    ;; configure javascript-tide checker to run after your default javascript checker
+    (setq js2-basic-offset 2)
+    (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append)
+    (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
+    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))))
+
+;; (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
+
+(use-package json-mode
+  :ensure t
+  :config
+  (progn
+    (flycheck-add-mode 'json-jsonlint 'json-mode)
+    (add-hook 'json-mode-hook 'flycheck-mode)
+    (setq js-indent-level 2)
+    (add-to-list 'auto-mode-alist '("\\.json" . json-mode))))
+
+(use-package web-mode
+  :ensure t
+  :config
+  (progn
+    (add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.js"     . web-mode))
+    (add-to-list 'auto-mode-alist '("\\.html"   . web-mode))
+    ;; this magic incantation fixes highlighting of jsx syntax in .js files
+    (setq web-mode-content-types-alist
+          '(("jsx" . "\\.js[x]?\\'")))
+    (add-hook 'web-mode-hook
+              (lambda ()
+                (setq web-mode-code-indent-offset 2)
+                (when (string-equal "tsx" (file-name-extension buffer-file-name))
+                  (setup-tide-mode))
+                (when (string-equal "jsx" (file-name-extension buffer-file-name))
+                  (setup-tide-mode))
+                (when (string-equal "js" (file-name-extension buffer-file-name))
+                  (progn
+                    (setup-tide-mode)
+                    (with-eval-after-load 'flycheck
+                      (flycheck-add-mode 'typescript-tslint 'web-mode)
+                      (flycheck-add-mode 'javascript-tide 'web-mode))))))
+    ))
+    ;; enable typescript-tslint checker
+
 
 ;; flyspell
 (defun js-flyspell-verify ()
@@ -185,6 +260,31 @@
 
 ;; flycheck
 (add-hook 'after-init-hook #'global-flycheck-mode)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ansi-color-faces-vector
+   [default default default italic underline success warning error])
+ '(ansi-color-names-vector
+   ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
+ '(ansi-term-color-vector
+   [unspecified "#FFFFFF" "#d15120" "#5f9411" "#d2ad00" "#6b82a7" "#a66bab" "#6b82a7" "#505050"] t)
+ '(custom-enabled-themes '(doom-one))
+ '(custom-safe-themes
+   '("2d1fe7c9007a5b76cea4395b0fc664d0c1cfd34bb4f1860300347cdad67fb2f9" default))
+ '(doom-modeline-env-enable-python t)
+ '(doom-modeline-env-python-executable "python3.8")
+ '(fci-rule-character-color "#d9d9d9")
+ '(fci-rule-color "#d9d9d9")
+ '(flycheck-python-pycompile-executable "python3.8")
+ '(package-selected-packages
+   '(treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil use-package emmet-mode doom-themes doom-modeline go-autocomplete exec-path-from-shell go-mode prettier-js add-node-modules-path twilight-bright-theme multiple-cursors wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete))
+ '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
+ '(wakatime-cli-path "/usr/local/bin/wakatime")
+ '(wakatime-python-bin nil)
+ '(xterm-mouse-mode t))
 
 ;; Prettier
 (require 'prettier-js)
@@ -256,37 +356,14 @@
 
 ;; All the icons
 (require 'all-the-icons)
-(all-the-icons-insert-icons-for 'alltheicon)
+(all-the-icons-insert-icons-for 'material)
 
 ;; Doom Modeline
 (require 'doom-modeline)
 (doom-modeline-mode 1)
 
 ;; Emacs customize
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ansi-color-faces-vector
-   [default default default italic underline success warning error])
- '(ansi-color-names-vector
-   ["#242424" "#e5786d" "#95e454" "#cae682" "#8ac6f2" "#333366" "#ccaa8f" "#f6f3e8"])
- '(ansi-term-color-vector
-   [unspecified "#FFFFFF" "#d15120" "#5f9411" "#d2ad00" "#6b82a7" "#a66bab" "#6b82a7" "#505050"])
- '(custom-enabled-themes (quote (doom-one)))
- '(custom-safe-themes
-   (quote
-    ("2d1fe7c9007a5b76cea4395b0fc664d0c1cfd34bb4f1860300347cdad67fb2f9" default)))
- '(fci-rule-character-color "#d9d9d9")
- '(fci-rule-color "#d9d9d9")
- '(package-selected-packages
-   (quote
-    (emmet-mode doom-themes doom-modeline go-autocomplete exec-path-from-shell go-mode prettier-js add-node-modules-path twilight-bright-theme multiple-cursors wakatime-mode solarized-theme scss-mode sass-mode org-journal org-bullets monokai-alt-theme markdown-mode json-mode helm-projectile git-gutter flycheck auto-complete)))
- '(wakatime-api-key (getenv "WAKATIME_API_KEY"))
- '(wakatime-cli-path "/usr/local/bin/wakatime")
- '(wakatime-python-bin nil)
- '(xterm-mouse-mode t))
+
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -419,7 +496,7 @@
 (setq doom-modeline-env-enable-rust t)
 
 ;; Change the executables to use for the language version string
-(setq doom-modeline-env-python-executable "python") ; or `python-shell-interpreter'
+(setq doom-modeline-env-python-executable "python3.8") ; or `python-shell-interpreter'
 (setq doom-modeline-env-ruby-executable "ruby")
 (setq doom-modeline-env-perl-executable "perl")
 (setq doom-modeline-env-go-executable "go")
@@ -432,3 +509,138 @@
 ;; Hooks that run before/after the modeline version string is updated
 (setq doom-modeline-before-update-env-hook nil)
 (setq doom-modeline-after-update-env-hook nil)
+
+
+;; Keybindings
+
+;; CTRL + SHIFT + d for duplicating a line
+(defun duplicate-line ()
+   (interactive)
+   (save-mark-and-excursion
+     (beginning-of-line)
+     (insert (thing-at-point 'line t))))
+
+ (global-set-key (kbd "C-S-d") 'duplicate-line)
+
+ ;; CTRL + SHIFT + J , K for moving line up and down
+
+ (defun move-line-down ()
+   (interactive)
+   (let ((col (current-column)))
+     (save-excursion
+       (forward-line)
+       (transpose-lines 1))
+     (forward-line)
+     (move-to-column col)))
+
+ (defun move-line-up ()
+   (interactive)
+   (let ((col (current-column)))
+     (save-excursion
+       (forward-line)
+       (transpose-lines -1))
+     (forward-line -1)
+     (move-to-column col)))
+
+ (global-set-key (kbd "C-S-j") 'move-line-down)
+ (global-set-key (kbd "C-S-k") 'move-line-up)
+
+
+;; For project tree
+(require 'treemacs)
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay      0.5
+          treemacs-directory-name-transformer    #'identity
+          treemacs-display-in-side-window        t
+          treemacs-eldoc-display                 t
+          treemacs-file-event-delay              5000
+          treemacs-file-extension-regex          treemacs-last-period-regex-value
+          treemacs-file-follow-delay             0.2
+          treemacs-file-name-transformer         #'identity
+          treemacs-follow-after-init             t
+          treemacs-git-command-pipe              ""
+          treemacs-goto-tag-strategy             'refetch-index
+          treemacs-indentation                   2
+          treemacs-indentation-string            " "
+          treemacs-is-never-other-window         nil
+          treemacs-max-git-entries               5000
+          treemacs-missing-project-action        'ask
+          treemacs-move-forward-on-expand        nil
+          treemacs-no-png-images                 nil
+          treemacs-no-delete-other-windows       t
+          treemacs-project-follow-cleanup        nil
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                      'left
+          treemacs-recenter-distance             0.1
+          treemacs-recenter-after-file-follow    nil
+          treemacs-recenter-after-tag-follow     nil
+          treemacs-recenter-after-project-jump   'always
+          treemacs-recenter-after-project-expand 'on-distance
+          treemacs-show-cursor                   nil
+          treemacs-show-hidden-files             t
+          treemacs-silent-filewatch              nil
+          treemacs-silent-refresh                nil
+          treemacs-sorting                       'alphabetic-asc
+          treemacs-space-between-root-nodes      t
+          treemacs-tag-follow-cleanup            t
+          treemacs-tag-follow-delay              1.5
+          treemacs-user-mode-line-format         nil
+          treemacs-user-header-line-format       nil
+          treemacs-width                         35
+          treemacs-workspace-switch-cleanup      nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ; (treemacs-resize-icons 32)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
+  :bind
+  (:map global-map
+        ("C-x t t"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("M-0"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-evil
+  :after treemacs evil
+  :ensure t)
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
+
+(use-package treemacs-persp ;;treemacs-persective if you use perspective.el vs. persp-mode
+  :after treemacs persp-mode ;;or perspective vs. persp-mode
+  :ensure t
+  :config (treemacs-set-scope-type 'Perspectives))
+
+(treemacs-git-mode 'extended)
+(with-eval-after-load 'treemacs
+  (add-to-list 'treemacs-pre-file-insert-predicates #'treemacs-is-file-git-ignored?))

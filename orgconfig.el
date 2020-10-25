@@ -11,8 +11,10 @@
         org-confirm-babel-evaluate nil
         org-todo-keywords '((sequence "TODO(t)" "DOING(g)" "|" "DONE(d)")
                             (sequence "|" "CANCELED(c)")))
+
   (add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
   (add-to-list 'auto-mode-alist '(".*/[0-9]*$" . org-mode))   ;; Journal entries
+
 (font-lock-add-keywords            ; A bit silly but my headers are now
    'org-mode `(("^\\*+ \\(TODO\\) "  ; shorter, and that is nice canceled
                 (1 (progn (compose-region (match-beginning 1) (match-end 1) "⚑")
@@ -27,6 +29,13 @@
                 (1 (progn (compose-region (match-beginning 1) (match-end 1) "✔")
                           nil)))))
 
+
+;; Org Habits
+
+(require 'org-habit)
+  (add-to-list 'org-modules 'org-habit)
+  (setq org-habit-graph-column 60)
+
 ;; Journaling
 
 (require 'org-journal)
@@ -35,17 +44,35 @@
 
 
 ;; Org-capture template
-
-(setq org-capture-templates (quote (
-("D" "diary" entry (file "~/Org/journal/work_diary.org") "* %T %?"))))
 (global-set-key [f8] 'org-capture)
+(setq org-capture-templates (quote (
+            ("j" "Daily Journal" entry (file+olp+datetree "~/Org/journal/daily.org")
+             "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+             :clock-in :clock-resume
+             :empty-lines 1)
+                    ("d" "Daily log" entry (file "~/Org/Tasks.org") "* %T %?")
+)))
 
-;; org default files
-(setq org-agenda-files '("~/Org/personal"
-                         "~/Org/technical"
-                         "~/Org/project"))
-(defvar org-default-notes-file "~/Org/personal/notes.org")
-(defvar org-default-tasks-file "~/Org/personal/tasks.org")
+
+;; org agenda files
+
+(setq org-refile-targets
+    '(("Archive.org" :maxlevel . 1)
+      ("Tasks.org" :maxlevel . 1)))
+
+;; Save Org buffers after refiling!
+(advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+(setq org-agenda-files
+  '("~/Org/Tasks.org"
+    "~/Org/Monthly.org"
+    "~/Org/Projects.org"
+    "~/Org/Habits.org"
+    "~/Org/Birthdays.org"))
+
+(setq org-agenda-start-with-log-mode t)
+(setq org-log-done 'time)
+(setq org-log-into-drawer t)
 
 
 ;; asterisks to bullets

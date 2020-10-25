@@ -3,6 +3,10 @@
 /elpa-*
 projectile-bookmarks.eld
 *.dat
+/*#
 /emacs_backup
 /auto_save
+/transient
+/*session.*
+/.cache
 .mc-lists.el

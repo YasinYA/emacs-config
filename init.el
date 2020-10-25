@@ -50,7 +50,6 @@
     helm-projectile
     json-reformat
     flyspell
-    typescript-mode
     tide
     company
     go-autocomplete
@@ -59,6 +58,9 @@
     doom-themes
     doom-modeline
     all-the-icons
+    dumb-jump
+    neotree
+    treemacs
 
     ;; Modes
     wakatime-mode
@@ -68,8 +70,12 @@
     scss-mode
     sass-mode
     prettier-js
+    js2-mode
+    web-mode
     emmet-mode
-    
+    typescript-mode
+    rjsx-mode
+
     ;; Themes
     monokai-alt-theme
     twilight-bright-theme
@@ -77,6 +83,8 @@
     ;;org packages
     org-journal
     org-bullets))
+
+(setq byte-compile-warnings '(cl-functions))
 
 
 ;; and install them all if they are not already installed
