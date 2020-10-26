@@ -61,6 +61,7 @@
     dumb-jump
     neotree
     treemacs
+    emojify
 
     ;; Modes
     wakatime-mode

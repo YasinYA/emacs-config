@@ -10,3 +10,5 @@ projectile-bookmarks.eld
 /*session.*
 /.cache
 .mc-lists.el
+/emojis
+/*bookmarks

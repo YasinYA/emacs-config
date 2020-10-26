@@ -5,6 +5,10 @@
 ;; Projectile dirs
 (setq projectile-project-search-path '("~/Projects/" "~/Work/"))
 
+;; Emojis
+(use-package emojify
+  :hook (after-init . global-emojify-mode))
+(add-hook 'after-init-hook #'global-emojify-mode)
 
 ;; Company Global mode
 (add-hook 'after-init-hook 'global-company-mode)
