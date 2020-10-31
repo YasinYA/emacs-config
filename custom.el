@@ -3,7 +3,7 @@
       initial-scratch-message nil)
 
 ;; Projectile dirs
-(setq projectile-project-search-path '("~/Projects/" "~/Work/"))
+(setq projectile-project-search-path '("~/Projects/" "~/Work/", "~/OpenSourceProjects/", "~/Scripts/"))
 
 ;; Emojis
 (use-package emojify
