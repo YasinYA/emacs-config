@@ -44,9 +44,21 @@
 
 
 ;; Org-capture template
+
+;; Encryption
+(setenv "GPG_AGENT_INFO" nil)
+(setq epg-gpg-program "/usr/bin/gpg")
+(require 'epa-file)
+(epa-file-enable)
+(require 'password-cache)
+
+(setq password-cache-expiry (* 15 60))
+
+(setq org-journal-encrypt-journal t)
+
 (global-set-key [f8] 'org-capture)
 (setq org-capture-templates (quote (
-            ("j" "Daily Journal" entry (file+olp+datetree "~/Org/journal/daily.org")
+            ("j" "Daily Journal" entry (file+olp+datetree "~/Org/journal/daily.org.gpg")
              "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
              :clock-in :clock-resume
              :empty-lines 1)
