@@ -60,6 +60,9 @@
 (setq auto-save-file-name-transforms
       `((".*" ,"~/.emacs.d/auto_save" t)))
 
+;; Disable Lockfiles
+(setq create-lockfiles nil)
+
 ;;  time
 (display-time-mode 1)
 
